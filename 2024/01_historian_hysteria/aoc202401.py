@@ -3,6 +3,7 @@
 # Standard library imports
 import pathlib
 import sys
+from collections import Counter
 
 
 def parse_data(puzzle_input):
@@ -10,25 +11,12 @@ def parse_data(puzzle_input):
 
 
 def part1(data):
-    first_row = [row[0] for row in data]
-    first_row.sort()
-    second_row = [row[1] for row in data]
-    second_row.sort()
-    result = 0
-    for i in range(0, len(first_row)):
-        result += abs(first_row[i] - second_row[i])
-    return result
+    return sum(abs(a - b) for a, b in zip(sorted([row[0] for row in data]), sorted([row[1] for row in data])))
 
 
 def part2(data):
-    first_row = [row[0] for row in data]
-    occurrences = {}
-    for number in [row[1] for row in data]:
-        occurrences[number] = occurrences.get(number, 0) + 1
-    result = 0
-    for i in first_row:
-        result += i * occurrences.get(i, 0)
-    return result
+    occurrences = Counter(row[1] for row in data)
+    return sum(i * occurrences.get(i, 0) for i in (row[0] for row in data))
 
 
 def solve(puzzle_input):
