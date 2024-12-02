@@ -3,6 +3,7 @@
 # Standard library imports
 import pathlib
 import sys
+import numpy as np
 
 
 def parse_data(puzzle_input):
@@ -25,14 +26,8 @@ def part2(data):
 
 
 def is_safe(line):
-    diffs = [line[i + 1] - line[i] for i in range(len(line) - 1)]
-    should_increase = diffs[0] > 0
-    for diff in diffs:
-        if not (1 <= abs(diff) <= 3):
-            return False
-        if (diff > 0) != should_increase:
-            return False
-    return True
+    diffs = np.diff(line)
+    return np.all((1 <= np.abs(diffs)) & (np.abs(diffs) <= 3)) and (np.all(diffs > 0) or np.all(diffs < 0))
 
 
 def solve(puzzle_input):
