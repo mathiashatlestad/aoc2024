@@ -11,18 +11,12 @@ def parse_data(puzzle_input):
 
 
 def part1(data):
-    return sum(1 for line in data if is_safe(line))
+    return sum(is_safe(line) for line in data)
 
 
 def part2(data):
-    count = 0
-    for line in data:
-        if is_safe(line):
-            count += 1
-            continue
-        if any(is_safe(line[:i] + line[i + 1:]) for i in range(len(line))):
-            count += 1
-    return count
+    return sum(
+        (is_safe(line) or (any(is_safe(line[:i] + line[i + 1:]) for i in range(len(line))))) for line in data)
 
 
 def is_safe(line):
