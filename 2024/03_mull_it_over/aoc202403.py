@@ -11,38 +11,26 @@ def parse_data(puzzle_input):
 
 
 def part1(data):
-    pattern = r"mul\(\d{1,3},\d{1,3}\)"
+    pattern = r"mul\((\d{1,3}),(\d{1,3})\)"
     matches = re.findall(pattern, data)
-    data = []
-    for match in matches:
-        match = match.replace("mul(", "").replace(")", "")
-        split = match.split(",")
-        data.append((int(split[0]), int(split[1])))
-    return sum(pair[0] * pair[1] for pair in data)
+    return sum(int(num1) * int(num2) for num1, num2 in matches)
 
 
 def part2(data):
-    pattern = r"(do\(\)|don't\(\)|mul\(\d{1,3},\d{1,3}\))"
+    pattern = r"(do\(\)|don't\(\)|mul\((\d{1,3}),(\d{1,3})\))"
     matches = re.findall(pattern, data)
-    data = []
     enabled = True
-    for match in matches:
+    result = 0
+
+    for match, num1, num2 in matches:
         if match == "don't()":
             enabled = False
-            continue
-
-        if match == "do()":
+        elif match == "do()":
             enabled = True
-            continue
+        elif enabled and num1 and num2:
+            result += int(num1) * int(num2)
 
-        if enabled is False:
-            continue
-
-        match = match.replace("mul(", "").replace(")", "")
-        split = match.split(",")
-        data.append((int(split[0]), int(split[1])))
-
-    return sum(pair[0] * pair[1] for pair in data)
+    return result
 
 
 def solve(puzzle_input):
