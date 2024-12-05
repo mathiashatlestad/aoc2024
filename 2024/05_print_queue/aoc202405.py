@@ -6,37 +6,31 @@ import sys
 
 from functools import cmp_to_key
 
-def custom_compare(item1, item2, rules):
-    if item2 in rules.get(item1, []):
-        return -1
-    if item1 in rules.get(item2, []):
-        return 1
-    return 0
-
 
 def parse_data(puzzle_input):
     parts = puzzle_input.strip().split("\n\n")
     rules = {}
     for line in parts[0].splitlines():
-        left, right = map(int, line.split("|"))
-        rules.setdefault(left, []).append(right)
+        l, r = map(int, line.split("|"))
+        rules.setdefault(l, []).append(r)
+    sorting_func = lambda a, b: -1 if b in rules.get(a, []) else (1 if a in rules.get(b, []) else 0)
     updates = [list(map(int, line.split(","))) for line in parts[1].splitlines()]
-    return updates, rules
+    return updates, sorting_func
 
 
-def part1(updates, rules):
+def part1(updates, sorting_func):
     total = 0
     for update in updates:
-        sorted_update = sorted(update, key=cmp_to_key(lambda a, b: custom_compare(a, b, rules)))
+        sorted_update = sorted(update, key=cmp_to_key(sorting_func))
         if sorted_update == update:
             total += sorted_update[int(len(sorted_update) / 2)]
     return total
 
 
-def part2(updates, rules):
+def part2(updates, sorting_func):
     total = 0
     for update in updates:
-        sorted_update = sorted(update, key=cmp_to_key(lambda a, b: custom_compare(a, b, rules)))
+        sorted_update = sorted(update, key=cmp_to_key(sorting_func))
         if sorted_update != update:
             total += sorted_update[int(len(sorted_update) / 2)]
     return total
@@ -44,9 +38,9 @@ def part2(updates, rules):
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
-    data, rules = parse_data(puzzle_input)
-    yield part1(data, rules)
-    yield part2(data, rules)
+    data, sorting_func = parse_data(puzzle_input)
+    yield part1(data, sorting_func)
+    yield part2(data, sorting_func)
 
 
 if __name__ == "__main__":
