@@ -6,62 +6,47 @@ import sys
 
 from functools import cmp_to_key
 
-
-custom_comp_data_left = {}
-
-
-def custom_compare(item1, item2):
-    item1_rule = custom_comp_data_left.get(item1, None)
-    if item1_rule is not None and item2 in item1_rule:
+def custom_compare(item1, item2, rules):
+    if item2 in rules.get(item1, []):
         return -1
-    item2_rule = custom_comp_data_left.get(item2, None)
-    if item2_rule is not None and item1 in item2_rule:
+    if item1 in rules.get(item2, []):
         return 1
-
     return 0
 
 
 def parse_data(puzzle_input):
     parts = puzzle_input.strip().split("\n\n")
-    part1, part2 = parts[0], parts[1]
-
-    list_of_rules = [tuple(map(int, line.split("|"))) for line in part1.splitlines()]
-
-    for rule in list_of_rules:
-        if rule[0] in custom_comp_data_left:
-            custom_comp_data_left[rule[0]].append(rule[1])
-        else:
-            custom_comp_data_left[rule[0]] = [rule[1]]
-
-    list_of_updates = [list(map(int, line.split(","))) for line in part2.splitlines()]
-
-    return list_of_updates
+    rules = {}
+    for line in parts[0].splitlines():
+        left, right = map(int, line.split("|"))
+        rules.setdefault(left, []).append(right)
+    updates = [list(map(int, line.split(","))) for line in parts[1].splitlines()]
+    return updates, rules
 
 
-def part1(data):
-    sum = 0
-    for update in data:
-        sorted_data = sorted(update, key=cmp_to_key(custom_compare))
-        if sorted_data == update:
-            sum += update[int(len(update) / 2)]
-    return sum
+def part1(updates, rules):
+    total = 0
+    for update in updates:
+        sorted_update = sorted(update, key=cmp_to_key(lambda a, b: custom_compare(a, b, rules)))
+        if sorted_update == update:
+            total += sorted_update[int(len(sorted_update) / 2)]
+    return total
 
 
-def part2(data):
-    sum = 0
-    for update in data:
-        sorted_data = sorted(update, key=cmp_to_key(custom_compare))
-        if sorted_data != update:
-            sum += sorted_data[int(len(sorted_data) / 2)]
-
-    return sum
+def part2(updates, rules):
+    total = 0
+    for update in updates:
+        sorted_update = sorted(update, key=cmp_to_key(lambda a, b: custom_compare(a, b, rules)))
+        if sorted_update != update:
+            total += sorted_update[int(len(sorted_update) / 2)]
+    return total
 
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
-    data = parse_data(puzzle_input)
-    yield part1(data)
-    yield part2(data)
+    data, rules = parse_data(puzzle_input)
+    yield part1(data, rules)
+    yield part2(data, rules)
 
 
 if __name__ == "__main__":
