@@ -5,119 +5,94 @@ import pathlib
 import sys
 import time
 
-
 def parse_data(puzzle_input):
-    """Parse input."""
-    return [list(line) for line in puzzle_input.split('\n')]
+    return [list(line) for line in puzzle_input.strip().split('\n')]
+
+
+def get_initial_state(data):
+
+    start = None
+    obstacles = set()
+
+    for i, row in enumerate(data):
+        for j, cell in enumerate(row):
+            if cell == '^':
+                start = (i, j)
+            elif cell == '#':
+                obstacles.add((i, j))
+
+    return start, obstacles, (len(data), len(data[0]))
+
+
+def traverse_grid(start, obstacles, directions, grid_size):
+
+    visited = set()
+    current = start
+    current_dir = 0
+
+    while True:
+        ni, nj = current[0] + directions[current_dir][0], current[1] + directions[current_dir][1]
+
+        if not (0 <= ni < grid_size[0] and 0 <= nj < grid_size[1]):
+            break
+
+        if (ni, nj) not in obstacles:  # Free to move
+            visited.add((ni, nj))
+            current = (ni, nj)
+        else:
+            current_dir = (current_dir + 1) % len(directions)
+
+    return visited
+
+
+def is_infinite_loop(obstacles, directions, start, grid_size):
+
+    visited = set()
+    current = start
+    current_dir = 0
+
+    while True:
+        ni, nj = current[0] + directions[current_dir][0], current[1] + directions[current_dir][1]
+
+        if not (0 <= ni < grid_size[0] and 0 <= nj < grid_size[1]):
+            return False
+
+        if (ni, nj) not in obstacles:
+            state = (ni, nj, current_dir)
+            if state in visited:
+                return True
+            visited.add(state)
+            current = (ni, nj)
+        else:
+            current_dir = (current_dir + 1) % len(directions)
 
 
 def part1(data):
-    """Solve part 1."""
-    directions = [
-        (-1, 0),  # Up
-        (0, 1),   # Right
-        (1, 0),   # Down
-        (0, -1),  # Left
-    ]
-
-    start = (0, 0)
-    obstacles = set()
-
-    for i in range(len(data)):
-        for j in range(len(data[0])):
-            if data[i][j] == '^':
-                start = (i, j)
-            elif data[i][j] == '#':
-                obstacles.add((i, j))
-
-    current = start
-    currentDir = 0
-    visited = set()
-    visited.add(current)
-    while True:
-        ni, nj = current[0] + directions[currentDir][0], current[1] + directions[currentDir][1]
-        if ni >= len(data) or ni < 0 or nj >= len(data[0]) or nj < 0:
-            break
-        elif (ni, nj) not in obstacles:
-            visited.add((ni, nj))
-            current = (ni, nj)
-            continue
-        else:
-            currentDir = currentDir + 1
-            if currentDir >= len(directions):
-                currentDir = 0
-
+    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # Up, Right, Down, Left
+    start, obstacles, grid_size = get_initial_state(data)
+    visited = traverse_grid(start, obstacles, directions, grid_size)
+    visited.add(start)
     return len(visited)
 
+
 def part2(data):
+
+    directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # Up, Right, Down, Left
+    start, obstacles, grid_size = get_initial_state(data)
+
+    visited = traverse_grid(start, obstacles, directions, grid_size)
+
     t0 = time.time()
-    """Solve part 2."""
-    directions = [
-        (-1, 0),  # Up
-        (0, 1),   # Right
-        (1, 0),   # Down
-        (0, -1),  # Left
-    ]
-
-    start = (0, 0)
-    obstacles = set()
-
-    for i in range(len(data)):
-        for j in range(len(data[0])):
-            if data[i][j] == '^':
-                start = (i, j)
-            elif data[i][j] == '#':
-                obstacles.add((i, j))
-
-    current = start
-    currentDir = 0
-    visited = set()
-
-    while True:
-        ni, nj = current[0] + directions[currentDir][0], current[1] + directions[currentDir][1]
-        if ni >= len(data) or ni < 0 or nj >= len(data[0]) or nj < 0:
-            break
-        elif (ni, nj) not in obstacles:
-            visited.add((ni, nj))
-            current = (ni, nj)
-            continue
-        else:
-            currentDir = currentDir + 1
-            if currentDir >= len(directions):
-                currentDir = 0
-    sum = 0
-    lenghts = (len(data), len(data[0]))
-    for (i, j) in visited:
-        obstacles.add((i, j))
-        if isInfinite(obstacles, directions, start, lenghts):
-            sum = sum + 1
-        obstacles.remove((i, j))
-
+    infinite_cells = 0
+    for cell in visited:
+        obstacles.add(cell)
+        if is_infinite_loop(obstacles, directions, start, grid_size):
+            infinite_cells += 1
+        obstacles.remove(cell)
     t1 = time.time()
 
-    total = t1-t0
-    print(total)
-    return sum
-
-def isInfinite(obstacles, directions, start, lengths):
-    visited = set()
-    current = start
-    currentDir = 0
-    while True:
-        ni, nj = current[0] + directions[currentDir][0], current[1] + directions[currentDir][1]
-        if ni >= lengths[0] or ni < 0 or nj >= lengths[1] or nj < 0:
-            return False
-        elif (ni, nj) not in obstacles:
-            if (ni, nj, currentDir) not in visited:
-                visited.add((ni, nj, currentDir))
-            else:
-                return True
-            current = (ni, nj)
-            continue
-        else:
-            currentDir = currentDir + 1
-            if currentDir >= len(directions):
-                currentDir = 0
+    print(f"Execution time: {t1 - t0:.2f} seconds")
+    return infinite_cells
 
 
 def solve(puzzle_input):
