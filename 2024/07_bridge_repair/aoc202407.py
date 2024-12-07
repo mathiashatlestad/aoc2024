@@ -3,64 +3,63 @@
 # Standard library imports
 import pathlib
 import sys
-from itertools import accumulate
 import time
-from functools import lru_cache
 
 def parse_data(puzzle_input):
-    result = []
-    for line in puzzle_input.strip().split('\n'):
-        key, values = line.split(':')
-        result.append((int(key.strip()), list(map(int, values.strip().split())) ))
-    return result
+    return [
+        (int(key), list(map(int, values.split())))
+        for line in puzzle_input.strip().split('\n')
+        for key, values in [line.split(':')]
+    ]
 
-def is_match_over(to_match, accumulated, operator, values_left, operators):
+def calculate_if_match(to_match, accumulated, operator, values, operators):
+
     if operator == '+':
-        accumulated += values_left[0]
+        accumulated += values[0]
     elif operator == '*':
-        accumulated *= values_left[0]
+        accumulated *= values[0]
     elif operator == '||':
-        accumulated = int(str(accumulated) + str(values_left[0]))
+        accumulated = int(f"{accumulated}{values[0]}")
 
+    if len(values) == 1:
+        return accumulated == to_match
+
+    # We only have increasing operators, so no point to continue if overshoot
     if accumulated > to_match:
         return False
-    if len(values_left) == 1:
-        if accumulated == to_match:
-            return True
-        else:
-            return False
 
     for operator in operators:
-        if is_match_over(to_match, accumulated, operator, values_left[1:], operators):
+        if calculate_if_match(to_match, accumulated, operator, values[1:], operators):
             return True
+
     return False
 
-def part1(data):
-    operators = ["+", "*"]
+
+def count_matches_for_operators(data, operators):
     matches = 0
-    for (to_match, values) in data:
-        for operator in operators:
-            if is_match_over(to_match, 0, operator, values, operators):
-                matches += to_match
-                break
+    for to_match, values in data:
+        if any(calculate_if_match(to_match, 0, operator, values, operators) for operator in operators):
+            matches += to_match
     return matches
+
+
+def part1(data):
+    """Solve part 1."""
+    t0 = time.time()
+    matches = count_matches_for_operators(data, ["+", "*"])
+    t1 = time.time()
+    print(f"Execution time pt1: {t1 - t0:.2f} seconds")
+    return matches
+
 
 def part2(data):
     """Solve part 2."""
     t0 = time.time()
-    operators = ["+", "*", "||"]
-    matches = 0
-    for (to_match, values) in data:
-        for operator in operators:
-            if is_match_over(to_match, 0, operator, values, operators):
-                matches += to_match
-                break
-
+    matches = count_matches_for_operators(data, ["||", "*", "+"])
     t1 = time.time()
-
-    print(f"Execution time: {t1 - t0:.2f} seconds")
-
+    print(f"Execution time pt2: {t1 - t0:.2f} seconds")
     return matches
+
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
