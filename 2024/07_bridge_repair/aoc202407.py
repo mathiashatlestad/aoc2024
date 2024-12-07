@@ -12,6 +12,12 @@ def parse_data(puzzle_input):
         for key, values in [line.split(':')]
     ]
 
+from functools import lru_cache
+
+@lru_cache(maxsize=None)
+def multiple_from_value(value):
+    return 10 ** len(str(value))
+
 def calculate_if_match(to_match, accumulated, operator, values, operators):
 
     if operator == '+':
@@ -19,7 +25,7 @@ def calculate_if_match(to_match, accumulated, operator, values, operators):
     elif operator == '*':
         accumulated *= values[0]
     elif operator == '||':
-        accumulated = int(f"{accumulated}{values[0]}")
+        accumulated = accumulated * multiple_from_value(values[0]) + values[0]
 
     if len(values) == 1:
         return accumulated == to_match
