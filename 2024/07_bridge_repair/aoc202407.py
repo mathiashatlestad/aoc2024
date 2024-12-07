@@ -43,7 +43,6 @@ def calculate_if_match(number_to_match, accumulated, operator, values, operators
     for operator in operators:
         if calculate_if_match(number_to_match, accumulated, operator, values[1:], operators):
             return True
-
     return False
 
 
