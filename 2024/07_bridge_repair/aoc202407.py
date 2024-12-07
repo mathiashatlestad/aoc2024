@@ -4,6 +4,7 @@
 import pathlib
 import sys
 import time
+from functools import cache
 
 def parse_data(puzzle_input):
     return [
@@ -12,17 +13,15 @@ def parse_data(puzzle_input):
         for key, values in [line.split(':')]
     ]
 
-from functools import lru_cache
 
-@lru_cache(maxsize=None)
+@cache
 def multiple_from_value(value):
     return 10 ** len(str(value))
 
 
 def calculate_if_match(number_to_match, accumulated, operator, values, operators):
-
     next_value = values[0]
-
+    
     if operator == '+':
         accumulated += next_value
     elif operator == '*':
