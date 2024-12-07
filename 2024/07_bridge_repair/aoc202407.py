@@ -18,24 +18,27 @@ from functools import lru_cache
 def multiple_from_value(value):
     return 10 ** len(str(value))
 
-def calculate_if_match(to_match, accumulated, operator, values, operators):
+
+def calculate_if_match(number_to_match, accumulated, operator, values, operators):
+
+    next_value = values[0]
 
     if operator == '+':
-        accumulated += values[0]
+        accumulated += next_value
     elif operator == '*':
-        accumulated *= values[0]
+        accumulated *= next_value
     elif operator == '||':
-        accumulated = accumulated * multiple_from_value(values[0]) + values[0]
+        accumulated = accumulated * multiple_from_value(next_value) + next_value
 
     if len(values) == 1:
-        return accumulated == to_match
+        return accumulated == number_to_match
 
     # We only have increasing operators, so no point to continue if overshoot
-    if accumulated > to_match:
+    if accumulated > number_to_match:
         return False
 
     for operator in operators:
-        if calculate_if_match(to_match, accumulated, operator, values[1:], operators):
+        if calculate_if_match(number_to_match, accumulated, operator, values[1:], operators):
             return True
 
     return False
@@ -43,10 +46,10 @@ def calculate_if_match(to_match, accumulated, operator, values, operators):
 
 def count_matches_for_operators(data, operators):
     matches = 0
-    for to_match, values in data:
+    for number_to_match, values in data:
         for operator in operators:
-            if calculate_if_match(to_match, 0, operator, values, operators):
-                matches += to_match
+            if calculate_if_match(number_to_match, 0, operator, values, operators):
+                matches += number_to_match
                 break
     return matches
 
