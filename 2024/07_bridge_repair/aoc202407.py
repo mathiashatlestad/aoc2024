@@ -38,8 +38,10 @@ def calculate_if_match(to_match, accumulated, operator, values, operators):
 def count_matches_for_operators(data, operators):
     matches = 0
     for to_match, values in data:
-        if any(calculate_if_match(to_match, 0, operator, values, operators) for operator in operators):
-            matches += to_match
+        for operator in operators:
+            if calculate_if_match(to_match, 0, operator, values, operators):
+                matches += to_match
+                break
     return matches
 
 
