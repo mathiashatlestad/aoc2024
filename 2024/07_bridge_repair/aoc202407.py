@@ -15,12 +15,10 @@ def parse_data(puzzle_input):
 
 ## All to avoid string handling!
 def multiple_from_value(value):
-    if value < 10:
-        return 10
-    elif value < 100:
-        return 100
-    elif value < 1000:
-        return 1000
+    m = 10
+    while value >= m:
+        m *= 10
+    return m
 
 
 def calculate_if_match(number_to_match, accumulated, operator, values, operators):
