@@ -13,18 +13,18 @@ def parse_data(puzzle_input):
 
 def part1(data):
     """Solve part 1."""
-    m_map = {}
+    signals = {}
     for i, row in enumerate(data):
         for j, cell in enumerate(row):
             if cell != '.':
-                m_map.setdefault(cell, []).append((i, j))
+                signals.setdefault(cell, []).append((i, j))
 
     anti_nodes = set()
     add_to_set_if_valid = lambda a, b: anti_nodes.add((a, b)) if 0 <= a < len(data) and 0 <= b < len(data[0]) else None
-    for node_positions in m_map.values():
-        while node_positions:
-            curr = node_positions.pop()
-            for other in node_positions:
+    for positions in signals.values():
+        while positions:
+            curr = positions.pop()
+            for other in positions:
                 di, dj = other[0] - curr[0], other[1] - curr[1]
                 add_to_set_if_valid(curr[0] - di, curr[1] - dj)
                 add_to_set_if_valid(other[0] + di, other[1] + dj)
