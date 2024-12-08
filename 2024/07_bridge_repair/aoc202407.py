@@ -3,7 +3,6 @@
 # Standard library imports
 import pathlib
 import sys
-import time
 
 def parse_data(puzzle_input):
     return [
@@ -11,7 +10,6 @@ def parse_data(puzzle_input):
         for line in puzzle_input.strip().split('\n')
         for key, values in [line.split(':')]
     ]
-
 
 ## All to avoid string handling!
 def multiple_from_value(value):
@@ -56,19 +54,13 @@ def count_matches_for_operators(data, operators):
 
 def part1(data):
     """Solve part 1."""
-    t0 = time.time()
     matches = count_matches_for_operators(data, ["+", "*"])
-    t1 = time.time()
-    print(f"Execution time pt1: {t1 - t0:.2f} seconds")
     return matches
 
 
 def part2(data):
     """Solve part 2."""
-    t0 = time.time()
     matches = count_matches_for_operators(data, ["||", "*", "+"])
-    t1 = time.time()
-    print(f"Execution time pt2: {t1 - t0:.2f} seconds")
     return matches
 
 

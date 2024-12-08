@@ -13,7 +13,6 @@ def parse_data(puzzle_input):
 
 def part1(data):
     """Solve part 1."""
-    t0 = time.time()
     m_map = {}
     for i, row in enumerate(data):
         for j, cell in enumerate(row):
@@ -30,14 +29,9 @@ def part1(data):
                 add_to_set_if_valid(curr[0] - di, curr[1] - dj)
                 add_to_set_if_valid(other[0] + di, other[1] + dj)
 
-    t1 = time.time()
-    print(f"Execution time pt1: {(t1 - t0)*1000} ms")
-
     return len(anti_nodes)
 
 def part2(data):
-    t0 = time.time()
-
     i_max = len(data)
     j_max = len(data[0])
     m_map = {}
@@ -62,9 +56,6 @@ def part2(data):
                             exp += 1
                         else:
                             break
-
-    t1 = time.time()
-    print(f"Execution time pt2: {(t1 - t0)*1000} ms")
 
     return len(anti_nodes)
 
