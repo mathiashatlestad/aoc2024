@@ -13,8 +13,7 @@ def parse_data(puzzle_input):
 
 def part1(data):
     """Solve part 1."""
-    i_max = len(data)
-    j_max = len(data[0])
+    t0 = time.time()
     m_map = {}
     for i, row in enumerate(data):
         for j, cell in enumerate(row):
@@ -22,24 +21,23 @@ def part1(data):
                 m_map.setdefault(cell, []).append((i, j))
 
     anti_nodes = set()
+    add_to_set_if_valid = lambda a, b: anti_nodes.add((a, b)) if 0 <= a < len(data) and 0 <= b < len(data[0]) else None
     for node_positions in m_map.values():
         while node_positions:
             curr = node_positions.pop()
             for other in node_positions:
                 di, dj = other[0] - curr[0], other[1] - curr[1]
-                ni, nj = curr[0]-di, curr[1]-dj
-                if 0 <= ni < i_max and 0 <= nj < j_max:
-                    anti_nodes.add((ni, nj))
-                ni, nj = other[0] + di, other[1] + dj
-                if 0 <= ni < i_max and 0 <= nj < j_max:
-                    anti_nodes.add((ni, nj))
+                add_to_set_if_valid(curr[0] - di, curr[1] - dj)
+                add_to_set_if_valid(other[0] + di, other[1] + dj)
+
+    t1 = time.time()
+    print(f"Execution time pt1: {(t1 - t0)*1000} ms")
 
     return len(anti_nodes)
 
 def part2(data):
     t0 = time.time()
 
-    """Solve part 2."""
     i_max = len(data)
     j_max = len(data[0])
     m_map = {}
@@ -66,7 +64,7 @@ def part2(data):
                             break
 
     t1 = time.time()
-    print(f"Execution time pt1: {(t1 - t0)*1000} ms")
+    print(f"Execution time pt2: {(t1 - t0)*1000} ms")
 
     return len(anti_nodes)
 
