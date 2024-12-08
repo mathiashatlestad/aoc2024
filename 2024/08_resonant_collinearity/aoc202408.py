@@ -41,10 +41,10 @@ def part2(data):
                 m_map.setdefault(cell, []).append((i, j))
 
     anti_nodes = set()
-    for node_positions in m_map.values():
-        while node_positions:
-            curr = node_positions.pop()
-            for other in node_positions:
+    for positions in m_map.values():
+        while positions:
+            curr = positions.pop()
+            for other in positions:
                 di, dj = other[0] - curr[0], other[1] - curr[1]
                 for direction in [-1, 1]:
                     exp = 0
