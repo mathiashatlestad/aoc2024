@@ -34,14 +34,14 @@ def part1(data):
 def part2(data):
     i_max = len(data)
     j_max = len(data[0])
-    m_map = {}
+    signals = {}
     for i, row in enumerate(data):
         for j, cell in enumerate(row):
             if cell != '.':
-                m_map.setdefault(cell, []).append((i, j))
+                signals.setdefault(cell, []).append((i, j))
 
     anti_nodes = set()
-    for positions in m_map.values():
+    for positions in signals.values():
         while positions:
             curr = positions.pop()
             for other in positions:
