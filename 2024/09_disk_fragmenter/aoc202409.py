@@ -9,16 +9,20 @@ def parse_data(puzzle_input):
     """Parse input."""
     return [int(char) for char in puzzle_input]
 
-def find_last(l):
-    for index, x in enumerate(reversed(l)):
-        if x >= 0:
-            return len(l) - index - 1
 
-def find_first_empty_element(l):
-    for index, x in enumerate(l):
-        if x < 0:
+def find_last(l, start_index):
+    for index in range(start_index, -1, -1):  # Iterate backwards from start_index-1
+        if l[index] >= 0:
             return index
-    return -1
+    return -1  # If no non-negative element is found
+
+
+def find_first_empty_element(l, start_index):
+    for index in range(start_index, len(l)):  # Iterate from start_index to the end
+        if l[index] < 0:
+            return index
+    return -1  # If no empty element is found
+
 
 def part1(data):
     """Solve part 1."""
@@ -36,15 +40,17 @@ def part1(data):
 
         file = not file
 
+    index_last = len(l) - 1
+    index_first = 0
 
     while True:
-        last_index = find_last(l)
-        first_empty_index = find_first_empty_element(l)
-        if last_index <= first_empty_index:
+        index_last = find_last(l, index_last)
+        index_first = find_first_empty_element(l, index_first)
+        if index_last <= index_first:
             break
-        temp = l[last_index]
-        l[last_index] = l[first_empty_index]
-        l[first_empty_index] = temp
+        temp = l[index_last]
+        l[index_last] = l[index_first]
+        l[index_first] = temp
 
     total = 0
     exp = 0
