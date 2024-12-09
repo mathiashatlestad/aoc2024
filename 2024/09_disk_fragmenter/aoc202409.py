@@ -53,11 +53,11 @@ def part2(data):
 
     to_find = curr_id - 1
     index_first = {}
-
     while to_find >= 0:
         tmp_index = -1
+        index_last = len(l) - 1
         while True:
-            (index_last, count) = find_last(l, to_find, len(l) - 1)
+            (index_last, count) = find_last(l, to_find, index_last)
             i_first = find_first_empty_element(l, index_first.get(count, 0), count)
 
             if i_first is None or (tmp_index == index_last or i_first >= index_last):
