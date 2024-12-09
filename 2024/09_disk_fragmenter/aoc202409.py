@@ -56,8 +56,6 @@ def part2(data):
 
     while to_find >= 0:
         tmp_index = -1
-        i_first = 0
-        index_first = {}
         while True:
             (index_last, count) = find_last(l, to_find, len(l) - 1)
             i_first = find_first_empty_element(l, index_first.get(count, 0), count)
@@ -68,14 +66,13 @@ def part2(data):
             if l[index_last] != to_find:
                 break
 
-            index_first[count] = i_first
+            index_first[count] = 0
             index_first[count-1] = i_first
 
             temp = l[index_last]
             l[index_last] = l[i_first]
             l[i_first] = temp
             tmp_index = index_last
-            index_last -=1
 
         to_find-=1
 
