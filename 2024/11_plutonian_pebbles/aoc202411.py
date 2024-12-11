@@ -18,17 +18,17 @@ def split_stone(number):
     return [int(s[:mid]), int(s[mid:])] if len(s) % 2 == 0 else [number * 2024]
 
 def solve_for_blinks(data, blinks):
-    stones = defaultdict(lambda: (0, 0), {s: (1, 0) for s in data})
+    stones = defaultdict(lambda: 0, {s: 1 for s in data})
     for i in range(blinks):
-        even, odd, new_stones = i % 2 == 0, i % 2 == 1, defaultdict(lambda: (0, 0))
-        for stone, (a, b) in stones.items():
-            if a * even + b * odd:
-                stones[stone] = (a * odd, b * even)
+        new_stones = defaultdict(lambda: 0)
+        for stone, count in stones.items():
+            if count:
+                stones[stone] = 0
                 for new_stone in split_stone(stone):
-                    na, nb = new_stones[new_stone]
-                    new_stones[new_stone] = (na + b * odd, nb + a * even)
-        stones.update({k: (stones[k][0] + a, stones[k][1] + b) for k, (a, b) in new_stones.items()})
-    return sum(sum(pair) for pair in stones.values())
+                    na = new_stones[new_stone]
+                    new_stones[new_stone] = na + count
+        stones.update({k: stones[k] + count for k, count in new_stones.items()})
+    return sum(count for count in stones.values())
 
 def part1(data):
     t0 = time.time()
@@ -39,7 +39,7 @@ def part1(data):
 
 def part2(data):
     t0 = time.time()
-    res = solve_for_blinks(data, 75)
+    res = solve_for_blinks(data, 1000)
     t1 = time.time()
     print(f"Part 2 time: {(t1 - t0) * 1000} ms ")
     return res
