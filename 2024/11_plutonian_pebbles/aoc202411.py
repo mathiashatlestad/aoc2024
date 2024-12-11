@@ -7,7 +7,6 @@ from collections import defaultdict
 import time
 
 def parse_data(puzzle_input):
-    """Parse input."""
     return list(map(int, puzzle_input.split()))
 
 @functools.lru_cache(None)
@@ -33,29 +32,22 @@ def solve_for_blinks(data, blinks):
 
 def part1(data):
     t0 = time.time()
-    """Solve part 1."""
     res = solve_for_blinks(data, 25)
     t1 = time.time()
     print(f"Part 1 time: {(t1 - t0) * 1000} ms ")
     return res
 
-
 def part2(data):
-    """Solve part 2."""
     t0 = time.time()
-    """Solve part 1."""
     res = solve_for_blinks(data, 75)
     t1 = time.time()
     print(f"Part 2 time: {(t1 - t0) * 1000} ms ")
     return res
 
-
 def solve(puzzle_input):
-    """Solve the puzzle for the given input."""
     data = parse_data(puzzle_input)
     yield part1(data)
     yield part2(data)
-
 
 if __name__ == "__main__":
     for path in sys.argv[1:]:
