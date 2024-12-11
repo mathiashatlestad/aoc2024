@@ -10,6 +10,8 @@ def parse_data(puzzle_input):
     """Parse input."""
     return list(map(int, puzzle_input.split()))
 
+
+
 def count_digit(n):
     if n == 0:
         return 1
@@ -18,6 +20,7 @@ def count_digit(n):
         n = n // 10
         count += 1
     return count
+
 
 @functools.lru_cache(maxsize=None)
 def split_number(number):
@@ -31,9 +34,7 @@ def split_number(number):
 
 
 def solve_for_blinks(data, blinks):
-
     nums = defaultdict(lambda: (0, 0))
-
     for num in data:
         nums[num] = (1, 0)
 
