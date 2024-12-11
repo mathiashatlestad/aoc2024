@@ -11,7 +11,7 @@ def parse_data(puzzle_input):
     return list(map(int, puzzle_input.split()))
 
 @functools.lru_cache(None)
-def split_number(number):
+def split_stone(number):
     if number == 0:
         return [1]
     s = str(number)
@@ -19,22 +19,17 @@ def split_number(number):
     return [int(s[:mid]), int(s[mid:])] if len(s) % 2 == 0 else [number * 2024]
 
 def solve_for_blinks(data, blinks):
-    nums = defaultdict(lambda: (0, 0), {num: (1, 0) for num in data})
-
+    stones = defaultdict(lambda: (0, 0), {s: (1, 0) for s in data})
     for i in range(blinks):
-        even, odd, new_items = i % 2 == 0, i % 2 == 1, defaultdict(lambda: (0, 0))
-
-        for key, (nu, nx) in nums.items():
-            if nu * even + nx * odd:
-                nums[key] = (nu * odd, nx * even)
-                for res in split_number(key):
-                    a, b = new_items[res]
-                    new_items[res] = (a + nx * odd, b + nu * even)
-
-        nums.update({k: (nums[k][0] + nu, nums[k][1] + nx) for k, (nu, nx) in new_items.items()})
-
-    return sum(sum(pair) for pair in nums.values())
-
+        even, odd, new_stones = i % 2 == 0, i % 2 == 1, defaultdict(lambda: (0, 0))
+        for stone, (a, b) in stones.items():
+            if a * even + b * odd:
+                stones[stone] = (a * odd, b * even)
+                for new_stone in split_stone(stone):
+                    na, nb = new_stones[new_stone]
+                    new_stones[new_stone] = (na + b * odd, nb + a * even)
+        stones.update({k: (stones[k][0] + a, stones[k][1] + b) for k, (a, b) in new_stones.items()})
+    return sum(sum(pair) for pair in stones.values())
 
 def part1(data):
     t0 = time.time()
