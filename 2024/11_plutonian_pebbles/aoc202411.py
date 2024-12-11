@@ -4,35 +4,26 @@ import functools
 import pathlib
 import sys
 from collections import defaultdict
-import collections
 import time
 
 def parse_data(puzzle_input):
     """Parse input."""
     return list(map(int, puzzle_input.split()))
 
-def countDigit(n):
-    # Base case
+def count_digit(n):
     if n == 0:
         return 1
-
     count = 0
-
-    # Iterate till n has digits remaining
     while n != 0:
-        # Remove rightmost digit
         n = n // 10
-
-        # Increment digit count by 1
         count += 1
-
     return count
 
 @functools.lru_cache(maxsize=None)
 def split_number(number):
     if number == 0:
         return [1]
-    digits = countDigit(number)
+    digits = count_digit(number)
     if (digits % 2) == 0:
         s = str(number)
         return [int(s[:digits//2]), int(s[digits//2:])]
