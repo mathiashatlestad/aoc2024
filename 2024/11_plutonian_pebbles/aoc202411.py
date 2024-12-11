@@ -4,7 +4,8 @@ import functools
 import pathlib
 import sys
 from collections import defaultdict
-
+import collections
+import time
 
 def parse_data(puzzle_input):
     """Parse input."""
@@ -29,55 +30,67 @@ def countDigit(n):
 
 @functools.lru_cache(maxsize=None)
 def split_number(number):
-
     if number == 0:
         return [1]
-
     digits = countDigit(number)
     if (digits % 2) == 0:
         s = str(number)
         return [int(s[:digits//2]), int(s[digits//2:])]
-
     return [number*2024]
 
-import collections
 
 def solve_for_blinks(data, blinks):
 
-    nums = defaultdict()
+    nums = defaultdict(lambda: (0, 0))
+
     for num in data:
         nums[num] = (1, 0)
 
-    for i in range(0, blinks):
-        exp1 = i % 2 == 0
-        exp2 = i % 2 != 0
-        new_items = []
-        for key, values in nums.items():
-            (nu, nx) = values
-            if nu * exp1 + nx * exp2 == 0:
+    for i in range(blinks):
+        is_even = i % 2 == 0
+        is_odd = not is_even
+
+        new_items = defaultdict(lambda: (0, 0))
+
+        for key, (nu, nx) in nums.items():
+            if nu * is_even + nx * is_odd == 0:
                 continue
 
-            nums[key] = (nu * exp2, nx * exp1)
+            nums[key] = (nu * is_odd, nx * is_even)
+
             for res in split_number(key):
-                new_items.append((nx * exp2, nu * exp1, res))
+                current_nu, current_nx = new_items[res]
+                new_items[res] = (
+                    current_nu + nx * is_odd,
+                    current_nx + nu * is_even,
+                )
 
-        for new_it in new_items:
-            nums.setdefault(new_it[2], (0, 0))
-            nums[new_it[2]] = tuple(x + y for x, y in zip(nums[new_it[2]], (new_it[0], new_it[1])))
+        for key, (nu, nx) in new_items.items():
+            nums[key] = (
+                nums[key][0] + nu,
+                nums[key][1] + nx,
+            )
 
-    total = 0
-    for num in nums.values():
-        total += num[0] + num[1]
-
+    total = sum(nu + nx for nu, nx in nums.values())
     return total
 
 def part1(data):
+    t0 = time.time()
     """Solve part 1."""
-    return solve_for_blinks(data, 25)
+    res = solve_for_blinks(data, 25)
+    t1 = time.time()
+    print(f"Part 1 time: {(t1 - t0) * 1000} ms ")
+    return res
+
 
 def part2(data):
     """Solve part 2."""
-    return solve_for_blinks(data, 75)
+    t0 = time.time()
+    """Solve part 1."""
+    res = solve_for_blinks(data, 75)
+    t1 = time.time()
+    print(f"Part 2 time: {(t1 - t0) * 1000} ms ")
+    return res
 
 
 def solve(puzzle_input):
