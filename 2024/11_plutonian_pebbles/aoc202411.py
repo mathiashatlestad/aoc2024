@@ -10,61 +10,31 @@ def parse_data(puzzle_input):
     """Parse input."""
     return list(map(int, puzzle_input.split()))
 
-
-
-def count_digit(n):
-    if n == 0:
-        return 1
-    count = 0
-    while n != 0:
-        n = n // 10
-        count += 1
-    return count
-
-
-@functools.lru_cache(maxsize=None)
+@functools.lru_cache(None)
 def split_number(number):
     if number == 0:
         return [1]
-    digits = count_digit(number)
-    if (digits % 2) == 0:
-        s = str(number)
-        return [int(s[:digits//2]), int(s[digits//2:])]
-    return [number*2024]
-
+    s = str(number)
+    mid = len(s) // 2
+    return [int(s[:mid]), int(s[mid:])] if len(s) % 2 == 0 else [number * 2024]
 
 def solve_for_blinks(data, blinks):
-    nums = defaultdict(lambda: (0, 0))
-    for num in data:
-        nums[num] = (1, 0)
+    nums = defaultdict(lambda: (0, 0), {num: (1, 0) for num in data})
 
     for i in range(blinks):
-        is_even = i % 2 == 0
-        is_odd = not is_even
-
-        new_items = defaultdict(lambda: (0, 0))
+        even, odd, new_items = i % 2 == 0, i % 2 == 1, defaultdict(lambda: (0, 0))
 
         for key, (nu, nx) in nums.items():
-            if nu * is_even + nx * is_odd == 0:
-                continue
+            if nu * even + nx * odd:
+                nums[key] = (nu * odd, nx * even)
+                for res in split_number(key):
+                    a, b = new_items[res]
+                    new_items[res] = (a + nx * odd, b + nu * even)
 
-            nums[key] = (nu * is_odd, nx * is_even)
+        nums.update({k: (nums[k][0] + nu, nums[k][1] + nx) for k, (nu, nx) in new_items.items()})
 
-            for res in split_number(key):
-                current_nu, current_nx = new_items[res]
-                new_items[res] = (
-                    current_nu + nx * is_odd,
-                    current_nx + nu * is_even,
-                )
+    return sum(sum(pair) for pair in nums.values())
 
-        for key, (nu, nx) in new_items.items():
-            nums[key] = (
-                nums[key][0] + nu,
-                nums[key][1] + nx,
-            )
-
-    total = sum(nu + nx for nu, nx in nums.values())
-    return total
 
 def part1(data):
     t0 = time.time()
