@@ -22,11 +22,11 @@ def solve_for_blinks(data, blinks):
     for i in range(blinks):
         new_stones = defaultdict(lambda: 0)
         for stone, count in stones.items():
-            if count:
-                stones[stone] = 0
-                for new_stone in split_stone(stone):
-                    na = new_stones[new_stone]
-                    new_stones[new_stone] = na + count
+            if not count:
+                continue
+            stones[stone] = 0
+            for new_stone in split_stone(stone):
+                new_stones[new_stone] += count
         stones.update({k: stones[k] + count for k, count in new_stones.items()})
     return sum(count for count in stones.values())
 
