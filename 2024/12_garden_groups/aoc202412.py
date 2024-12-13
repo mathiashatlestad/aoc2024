@@ -55,48 +55,46 @@ def find_all_neighbors(data,  i, j, this_set, curr):
             continue
         find_all_neighbors(data, nx, ny, this_set, curr)
 
-def scan_horizontal(this_set, i, j_min, j_max):
-    left_edge = 0
-    right_edge = 0
-    already_right_edge = set()
-    already_left_edge = set()
+def scan_horizontal(this_set, i, j_min, j_max, already_forward_edge, already_behind_edge):
+    forward_edge = 0
+    behind_edge = 0
     for j in range(j_min - 1, j_max + 1):
 
         if (i, j) not in this_set:
             continue
 
-        ny = j - 1
+        if (i, j-1) not in this_set:
+            if (i-1, j) not in already_behind_edge:
+                behind_edge+=1
+            already_behind_edge.add((i, j))
 
-        if (i - 1, j) not in this_set and (i, ny) not in already_left_edge:
-            left_edge+=1
-            already_left_edge.add((i, j))
+        if (i, j+1) not in this_set:
+            if (i-1, j) not in already_forward_edge:
+                forward_edge+=1
+            already_forward_edge.add((i, j))
 
-        if (i + 1, j) not in this_set and (i, ny) not in already_right_edge:
-            right_edge+=1
-            already_right_edge.add((i, j))
-
-    return right_edge + left_edge
+    return forward_edge + behind_edge
 
 
-def scan_vertical(this_set, j, i_min, i_max):
-    left_edge = 0
-    right_edge = 0
-    already_right_edge = set()
-    already_left_edge = set()
+def scan_vertical(this_set, j, i_min, i_max, already_forward_edge, already_behind_edge):
+    forward_edge = 0
+    behind_edge = 0
     for i in range(i_min - 1, i_max + 1):
+
         if (i, j) not in this_set:
             continue
 
-        ny = i - 1
-        if (i, j - 1) not in this_set and (ny, j) not in already_left_edge:
-            left_edge += 1
-            already_left_edge.add((i, j))
+        if (i-1, j) not in this_set:
+            if (i, j-1) not in already_behind_edge:
+                behind_edge+=1
+            already_behind_edge.add((i, j))
 
-        if (i, j + 1) not in this_set and (ny, j) not in already_right_edge:
-            right_edge += 1
-            already_right_edge.add((i, j))
+        if (i+1, j) not in this_set:
+            if (i, j-1) not in already_forward_edge:
+                forward_edge+=1
+            already_forward_edge.add((i, j))
 
-    return right_edge + left_edge
+    return forward_edge + behind_edge
 
 
 def part2(data):
@@ -121,24 +119,18 @@ def part2(data):
             global_max_j = max(all_j)
 
             horizontal = 0
-            print("First: " + cell)
-            print("------")
+            already_forward_edge = set()
+            already_behind_edge = set()
             for ti in range(global_min_i, global_max_i + 1):
-                horizontal += scan_horizontal(this_set, ti, global_min_j, global_max_j)
+                horizontal += scan_horizontal(this_set, ti, global_min_j, global_max_j, already_forward_edge, already_behind_edge)
 
-            print("------")
             vertical = 0
+            already_forward_edge = set()
+            already_behind_edge = set()
             for ji in range(global_min_j, global_max_j + 1):
-                vertical+=scan_vertical(this_set, ji, global_min_i, global_max_i)
-            print("------")
-
-            print(cell, len(this_set), horizontal, vertical)
-
-            print("------")
-            print("------")
-
-
+                vertical += scan_vertical(this_set, ji, global_min_i, global_max_i, already_forward_edge, already_behind_edge)
             total += len(this_set)*(vertical + horizontal)
+
     return total
 
 def solve(puzzle_input):
