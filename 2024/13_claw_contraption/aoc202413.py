@@ -4,6 +4,13 @@ import functools
 import pathlib
 import sys
 import re
+from math import gcd
+from math import lcm
+from sympy import symbols, Eq, solve, Integer
+from scipy.optimize import linprog
+import pulp as pl
+
+from functools import reduce
 
 def parse_data(puzzle_input):
     """Parse input."""
@@ -15,51 +22,45 @@ def parse_data(puzzle_input):
         results.append((a_x, a_y, b_x, b_y, prize_x, prize_y))
     return results
 
-@functools.lru_cache(maxsize=None)
-def price(rem_prize_x, rem_prize_y, a_x, a_y, b_x, b_y):
-    if rem_prize_x < 0 or rem_prize_y < 0:
-        return 10000000000000
+def solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y):
+    tokens = 0
 
-    if rem_prize_x == 0 and rem_prize_y == 0:
-        return 0
+    # Define the problem
+    problem = pl.LpProblem("Minimize_tokens", pl.LpMinimize)
 
-    price_a = 3 + price(rem_prize_x-a_x, rem_prize_y-a_y, a_x, a_y, b_x, b_y)
-    price_b = 1 + price(rem_prize_x-b_x, rem_prize_y-b_y, a_x, a_y, b_x, b_y)
+    # Variables
+    n_a = pl.LpVariable("n_a", lowBound=0, cat=pl.LpInteger)
+    n_b = pl.LpVariable("n_b", lowBound=0, cat=pl.LpInteger)
 
-    if price_b is not None and price_a is not None:
-        return min(price_a, price_b)
+    problem += 3 * n_a + n_b
 
-    if price_a is not None:
-        return price_a
+    problem += (dx_a * n_a + dx_b * n_b == prize_x)
+    problem += (dy_a * n_a + dy_b * n_b == prize_y)
 
-    if price_b is not None:
-        return price_b
+    solver = pl.PULP_CBC_CMD()
+    problem.solve(solver)
 
-    return 10000000000000
+    if problem.status == 1:
+        tokens += (3 * n_a.value() + n_b.value())
+    return tokens
 
 def part1(data):
     """Solve part 1."""
     tokens = 0
-    for a_x, a_y, b_x, b_y, prize_x, prize_y in data:
-        smallest = price(prize_x, prize_y, a_x, a_y, b_x, b_y)
-        if smallest < 100000000000000000000000000:
-            tokens += smallest
+    for dx_a, dy_a, dx_b, dy_b, prize_x, prize_y in data:
+        tokens += solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y)
     return tokens
 
 def part2(data):
     """Solve part 2."""
     tokens = 0
-    for a_x, a_y, b_x, b_y, prize_x, prize_y in data:
-        prize_x += 10000000000000
-        prize_y += 10000000000000
+    for dx_a, dy_a, dx_b, dy_b, prize_x, prize_y in data:
+        prize_x+=10000000000000
+        prize_y+=10000000000000
+        tokens += solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y)
 
-        least_common_denominator = a_x*b_x*a_y*b_y
-        prize_x = prize_x // least_common_denominator
-        prize_y = prize_y // least_common_denominator
-
-        smallest = price(prize_x, prize_y, a_x, a_y, b_x, b_y)
-        if smallest < 10000000000000000000000000000000:
-            tokens += smallest*least_common_denominator
+    if tokens <= 1762329637000 or tokens == 65975505751957 or tokens == 61556658416632 or tokens == 78481942092912:
+        print("Part 2 incorrect")
     return tokens
 
 def solve(puzzle_input):
@@ -70,7 +71,6 @@ def solve(puzzle_input):
 
 
 if __name__ == "__main__":
-    sys.setrecursionlimit(10000)
     for path in sys.argv[1:]:
         print(f"\n{path}:")
         solutions = solve(puzzle_input=pathlib.Path(path).read_text().rstrip())
