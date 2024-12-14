@@ -4,13 +4,7 @@ import functools
 import pathlib
 import sys
 import re
-from math import gcd
-from math import lcm
-from sympy import symbols, Eq, solve, Integer
-from scipy.optimize import linprog
-import pulp as pl
-
-from functools import reduce
+import numpy as np
 
 def parse_data(puzzle_input):
     """Parse input."""
@@ -23,26 +17,17 @@ def parse_data(puzzle_input):
     return results
 
 def solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y):
-    tokens = 0
+    prize = (prize_x, prize_y)
+    matrix = np.array([(dx_a, dy_a), (dx_b, dy_b)], dtype=int).transpose()
+    result = np.linalg.solve(matrix, prize)
 
-    # Define the problem
-    problem = pl.LpProblem("Minimize_tokens", pl.LpMinimize)
+    result[0] = round(result[0])
+    result[1] = round(result[1])
 
-    # Variables
-    n_a = pl.LpVariable("n_a", lowBound=0, cat=pl.LpInteger)
-    n_b = pl.LpVariable("n_b", lowBound=0, cat=pl.LpInteger)
+    if not np.any(matrix @ result - prize):
+        return int(3 * result[0] + result[1])
 
-    problem += 3 * n_a + n_b
-
-    problem += (dx_a * n_a + dx_b * n_b == prize_x)
-    problem += (dy_a * n_a + dy_b * n_b == prize_y)
-
-    solver = pl.PULP_CBC_CMD()
-    problem.solve(solver)
-
-    if problem.status == 1:
-        tokens += (3 * n_a.value() + n_b.value())
-    return tokens
+    return 0
 
 def part1(data):
     """Solve part 1."""
@@ -51,17 +36,14 @@ def part1(data):
         tokens += solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y)
     return tokens
 
+
 def part2(data):
     """Solve part 2."""
     tokens = 0
     for dx_a, dy_a, dx_b, dy_b, prize_x, prize_y in data:
-        prize_x+=10000000000000
-        prize_y+=10000000000000
-        tokens += solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x, prize_y)
-
-    if tokens <= 1762329637000 or tokens == 65975505751957 or tokens == 61556658416632 or tokens == 78481942092912:
-        print("Part 2 incorrect")
+        tokens += solve_equation(dx_a, dy_a, dx_b, dy_b, prize_x+10000000000000, prize_y+10000000000000)
     return tokens
+
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
