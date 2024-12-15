@@ -59,9 +59,9 @@ def try_move_pt1(mapp, start, direction):
 
     return start
 
-def find_if_allowed_to_move_boxes(mapp, start, direction):
+def find_allowed_to_move_boxes(mapp, start, direction):
     boxes_to_move = []
-    ni, nj = start[0] + direction[0], start[1] + direction[1]
+    ni, nj = new_coordinate(start, direction)
 
     if mapp[ni][nj] == '[':
         boxes_to_move.append((ni, nj))
@@ -70,14 +70,11 @@ def find_if_allowed_to_move_boxes(mapp, start, direction):
         boxes_to_move.append((ni, nj))
         boxes_to_move.append((ni, nj-1))
 
-    box_added = True
-
-    while box_added:
-        box_added = False
+    prev_boxes = []
+    while prev_boxes != boxes_to_move:
         for box in boxes_to_move:
             ni, nj = box[0] + direction[0], box[1] + direction[1]
             if mapp[ni][nj] == '[' and (ni, nj) not in boxes_to_move:
-                box_added = True
                 boxes_to_move.append((ni, nj))
                 if (ni, nj+1) not in boxes_to_move:
                     boxes_to_move.append((ni, nj+1))
@@ -85,33 +82,29 @@ def find_if_allowed_to_move_boxes(mapp, start, direction):
                 boxes_to_move.append((ni, nj))
                 if (ni, nj-1) not in boxes_to_move:
                     boxes_to_move.append((ni, nj-1))
-                box_added = True
+        prev_boxes = boxes_to_move
 
     for box in boxes_to_move:
-        ni, nj = box[0] + direction[0], box[1] + direction[1]
+        ni, nj = new_coordinate(box, direction)
         if mapp[ni][nj] == '#':
             return []
 
     return boxes_to_move
 
+def new_coordinate(cord, direction):
+    return cord[0] + direction[0], cord[1] + direction[1]
+
 def try_move_pt2(mapp, start, direction):
-    current = start
-    ni, nj = current[0] + direction[0], current[1] + direction[1]
-
-    if mapp[ni][nj] == '#':
-        return start
-
-    boxes_to_move = find_if_allowed_to_move_boxes(mapp, start, direction)
+    allowed_boxes_to_move = find_allowed_to_move_boxes(mapp, start, direction)
 
     def projection(coord, vector):
         return coord[0] * vector[0] + coord[1] * vector[1]
 
-    sorted_boxes = sorted(boxes_to_move, key=lambda coord: projection(coord, direction))
-    for item in reversed(sorted_boxes):
-        ni, nj = item[0] + direction[0], item[1] + direction[1]
+    for item in sorted(allowed_boxes_to_move, key=lambda coord: projection(coord, direction), reverse=True):
+        ni, nj = new_coordinate(item, direction)
         mapp[item[0]][item[1]], mapp[ni][nj] = mapp[ni][nj], mapp[item[0]][item[1]]
 
-    ni, nj = start[0] + direction[0], start[1] + direction[1]
+    ni, nj = new_coordinate(start, direction)
     if mapp[ni][nj] == '.':
         mapp[start[0]][start[1]]  = '.'
         mapp[ni][nj] = '@'
@@ -146,8 +139,6 @@ def part1(puzzle_input):
     for move in moves:
         current = try_move_pt1(mapp, current, directions[move])
     return calculate_weights(mapp)
-
-
 
 def part2(puzzle_input):
     """Solve part 2."""
