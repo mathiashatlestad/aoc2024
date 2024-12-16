@@ -27,26 +27,14 @@ def resulting_position(pos, vel, max_pos, iterations):
 
     return (res_x, res_y)
 
+
 def calculate_weight(results, max_pos):
-    first = 0
-    for x in range(0, (max_pos[0] // 2)):
-        for y in range(0, (max_pos[1] // 2)):
-            first += results.count((x, y))
+    half_x, half_y = max_pos[0] // 2, max_pos[1] // 2
 
-    second = 0
-    for x in range(0, (max_pos[0] // 2)):
-        for y in range((max_pos[1] // 2) + 1, max_pos[1]):
-            second += results.count((x, y))
-
-    third = 0
-    for x in range((max_pos[0] // 2) + 1, max_pos[0]):
-        for y in range(0, (max_pos[1] // 2)):
-            third += results.count((x, y))
-
-    forth = 0
-    for x in range((max_pos[0] // 2) + 1 , max_pos[0]):
-        for y in range((max_pos[1] // 2) + 1, max_pos[1]):
-            forth += results.count((x, y))
+    first = sum(results.count((x, y)) for x in range(half_x) for y in range(half_y))
+    second = sum(results.count((x, y)) for x in range(half_x) for y in range(half_y+1, max_pos[1]))
+    third = sum(results.count((x, y)) for x in range(half_x+1, max_pos[0]) for y in range(half_y))
+    forth = sum(results.count((x, y)) for x in range(half_x+1, max_pos[0]) for y in range(half_y+1, max_pos[1]))
 
     return first * second * third * forth
 
