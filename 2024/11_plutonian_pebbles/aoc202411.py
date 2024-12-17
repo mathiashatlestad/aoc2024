@@ -39,7 +39,7 @@ def part1(data):
 
 def part2(data):
     t0 = time.time()
-    res = solve_for_blinks(data, 1000)
+    res = solve_for_blinks(data, 75)
     t1 = time.time()
     print(f"Part 2 time: {(t1 - t0) * 1000} ms ")
     return res
