@@ -4,6 +4,7 @@
 import pathlib
 import sys
 import re
+from operator import truediv
 
 
 def parse_data(puzzle_input):
@@ -23,9 +24,9 @@ def parse_data(puzzle_input):
 
 def perform_instruction(ptr, registers, program):
     if len(program) <= ptr+1:
-        return -1, None
+        return -1, -1
 
-    output = None
+    output = -1
     opcode = program[ptr]
     literal = program[ptr+1]
 
@@ -37,8 +38,6 @@ def perform_instruction(ptr, registers, program):
         combo = registers['B']
     elif literal == 6:
         combo = registers['C']
-    else:
-        raise ValueError('invalid combo operand')
 
     if opcode == 0: # adv
         registers['A'] = registers['A'] // (2 ** combo)
@@ -52,39 +51,70 @@ def perform_instruction(ptr, registers, program):
     elif opcode == 4:
         registers['B'] = registers['B'] ^ registers['C']
     elif opcode == 5:
-        output = str(combo % 8)
+        output = combo % 8
     elif opcode == 6:
         registers['B'] = registers['A'] // (2 ** combo)
     elif opcode == 7:
         registers['C'] = registers['A'] // (2 ** combo)
-    else:
-        raise ValueError('invalid opcode')
 
     return ptr + 2, output
 
 def part1(data):
-    ptr = 0
     """Solve part 1."""
     registers, program = parse_data(data)
-    print(registers)
-    print(program)
-    outputs = ""
+    outputs = []
+    ptr = 0
     while ptr >= 0:
         ptr, output = perform_instruction(ptr, registers, program)
-        if output:
-            outputs += output
-    print(registers)
+        if output >= 0:
+            outputs.append(str(output))
 
-    print(pow(2, 0))
-
-    if outputs == "210462420":
-        exit("WRONG")
-
-    return outputs
+    return ','.join(outputs)
 
 def part2(data):
-    """Solve part 2."""
 
+    """Solve part 2."""
+    registers, program = parse_data(data)
+    b_org = registers['B']
+    c_org = registers['C']
+    found = False
+    register_a_value = 4675000000
+    while found is False:
+        outputs = []
+        ptr = 0
+        register_a_value += 1
+        registers['A'] = register_a_value
+        registers['B'] = b_org
+        registers['C'] = c_org
+        if register_a_value % 1000000 == 0:
+            print(register_a_value)
+
+        while ptr >= 0:
+            ptr, output = perform_instruction(ptr, registers, program)
+            if output >= 0:
+                outputs.append(output)
+
+            if outputs == program:
+                found = True
+                break
+
+            if is_subarray_prefix(outputs, program) is False:
+                found = False
+                break
+
+    return register_a_value
+
+
+def is_subarray_prefix(subarray, main_array):
+    if len(subarray) == 0:
+        return True
+
+    # Check if the length of subarray is greater than main_array
+    if len(subarray) > len(main_array):
+        return False
+
+    # Compare the subarray with the start of the main array
+    return main_array[:len(subarray)] == subarray
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
