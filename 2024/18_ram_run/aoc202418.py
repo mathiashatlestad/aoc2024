@@ -5,8 +5,6 @@ import pathlib
 import sys
 
 import heapq
-from collections import defaultdict
-from inspect import stack
 
 DIRECTIONS = {
     'up': (0, -1),
@@ -49,34 +47,31 @@ def part1(data):
     max_pos = 70
     for corr in data[:to_drop]:
         cor_map.add(corr)
-
-    print_memory(cor_map, max_pos + 1)
-
     cost = dijkstra_on_corruped_memory(cor_map, (0,0), (max_pos, max_pos), max_pos + 1)
-
     return cost
-
-def print_memory(memory, size):
-
-    for y in range(size):
-        tmp = ""
-        for x in range(size):
-            if (y, x) in memory:
-                tmp += '#'
-            else:
-                tmp += '.'
-        print(tmp)
 
 def part2(data):
     """Solve part 2."""
+    cor_map = set()
+    to_drop = 1024
+    max_pos = 70
+    
+    for corr in data[:to_drop]:
+        cor_map.add(corr)
 
+    ## Should look into using binary search instead of brute forcing this!
+    while True:
+        cor_map.add(data[to_drop])
+        cost = dijkstra_on_corruped_memory(cor_map, (0, 0), (max_pos, max_pos), max_pos + 1)
+        if cost == float('inf'):
+            return data[to_drop]
+        to_drop += 1
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
     data = parse_data(puzzle_input)
     yield part1(data)
     yield part2(data)
-
 
 if __name__ == "__main__":
     for path in sys.argv[1:]:
