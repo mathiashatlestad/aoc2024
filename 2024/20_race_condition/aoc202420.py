@@ -1,136 +1,161 @@
-"""AoC 20, 2024: Race Condition."""
-
-# Standard library imports
-import pathlib
 import sys
+import pathlib
+from collections import deque
 
-import heapq
-
-DIRECTIONS = {
-    'up': (0, -1),
-    'down': (0, 1),
-    'left': (-1, 0),
-    'right': (1, 0),
-}
-
+DIRECTIONS = [
+    (0, 1),   # down
+    (0, -1),  # up
+    (1, 0),   # right
+    (-1, 0),  # left
+]
 
 def parse_data(puzzle_input):
     if isinstance(puzzle_input, str):
-        lines = puzzle_input.split('\n')
+        lines = puzzle_input.strip().split('\n')
     else:
         lines = puzzle_input
     return [list(line) for line in lines if line]
 
-
-def dijkstra_with_cheating(walls, already_cheated, start, end, width, height, max_allowed_to_cheat):
-    pq = []
-    no_cheat = (-1, -1, -1, -1)
-
-    heapq.heappush(pq, (0, start[0], start[1], no_cheat, max_allowed_to_cheat))
-    visited = {}
-    min_cost = float('inf')
-    min_cheat = no_cheat
-
-    while pq:
-        cost, y, x, cheat, remaining_cheats = heapq.heappop(pq)
-
-        if (y, x) in walls and remaining_cheats <= 0:
-            continue
-
-        if cheat in already_cheated:
-            continue
-
-        if (y, x) == end:
-            if cost < min_cost:
-                min_cost = cost
-                min_cheat = cheat
-
-        if (y, x, cheat is no_cheat) in visited and visited[(y, x, cheat is no_cheat)] <= cost:
-            continue
-
-        visited[(y, x, cheat is no_cheat)] = cost
-
-        for new_direction, (dy, dx) in DIRECTIONS.items():
-            ny, nx = y + dy, x + dx
-            if 0 <= ny < height and 0 <= nx < width:
-                if (ny, nx) not in walls:
-                    new_cheat = cheat
-                    new_remaining_cheat = remaining_cheats
-                    if cheat != no_cheat:
-                        new_remaining_cheat = remaining_cheats - 1
-                        new_cheat = (cheat[0], cheat[1], ny, nx)
-                    heapq.heappush(pq, (cost + 1, ny, nx, new_cheat, new_remaining_cheat))
-                elif remaining_cheats > 0:
-                    if cheat == no_cheat:
-                        new_cheat = (ny, nx, ny, nx)
-                    else:
-                        new_cheat = (cheat[0], cheat[1], ny, nx)
-                    heapq.heappush(pq, (cost + 1, ny, nx, new_cheat, remaining_cheats - 1))
-
-    return min_cost, min_cheat
-
 def find_item(mapp, c):
-    for i, row in enumerate(mapp):
-        for j, col in enumerate(row):
-            if col == c:
-                return (i, j)
+    for r, row in enumerate(mapp):
+        for c_idx, val in enumerate(row):
+            if val == c:
+                return (r, c_idx)
+    return None
 
-def part1(data):
-    """Solve part 1."""
-    walls = set()
-    width, height = len(data[0]), len(data)
-    start = find_item(data, 'S')
-    end = find_item(data, 'E')
-    already_cheated = set()
-    for y in range(height):
-        for x in range(width):
-            if data[y][x] == '#':
-                walls.add((y, x))
+def bfs_normal(mapp, start):
+    rows, cols = len(mapp), len(mapp[0])
+    dist = [[None]*cols for _ in range(rows)]
+    queue = deque()
+    r0, c0 = start
+    dist[r0][c0] = 0
+    queue.append((r0, c0))
+    while queue:
+        r, c = queue.popleft()
+        for dr, dc in DIRECTIONS:
+            nr, nc = r+dr, c+dc
+            if 0 <= nr < rows and 0 <= nc < cols:
+                if mapp[nr][nc] != '#' and dist[nr][nc] is None:
+                    dist[nr][nc] = dist[r][c] + 1
+                    queue.append((nr, nc))
+    return dist
 
-    no_cheat_cost, min_cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 0)
+def bfs_ignore_walls_limited(mapp, start, max_steps):
+    rows, cols = len(mapp), len(mapp[0])
+    dist = [[None]*cols for _ in range(rows)]
+    queue = deque()
+    r0, c0 = start
+    dist[r0][c0] = 0
+    queue.append((r0, c0))
+    while queue:
+        r, c = queue.popleft()
+        for dr, dc in DIRECTIONS:
+            nr, nc = r+dr, c+dc
+            if 0 <= nr < rows and 0 <= nc < cols:
+                if dist[nr][nc] is None:
+                    new_cost = dist[r][c] + 1
+                    if new_cost <= max_steps:
+                        dist[nr][nc] = new_cost
+                        queue.append((nr, nc))
+    return dist
 
-    while True:
-        with_cheat_cost, cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 2)
-        if no_cheat_cost - with_cheat_cost >= 20:
-            print(no_cheat_cost, no_cheat_cost - with_cheat_cost, cheat)
-            already_cheated.add(cheat)
-        else:
-            break
+def find_track_cells(mapp):
+    track = []
+    rows, cols = len(mapp), len(mapp[0])
+    for r in range(rows):
+        for c in range(cols):
+            if mapp[r][c] != '#':
+                track.append((r, c))
+    return track
 
-    return len(already_cheated)
+def part1(mapp):
+    S = find_item(mapp, 'S')
+    E = find_item(mapp, 'E')
 
-def part2(data):
-    walls = set()
-    width, height = len(data[0]), len(data)
-    start = find_item(data, 'S')
-    end = find_item(data, 'E')
-    already_cheated = set()
-    for y in range(height):
-        for x in range(width):
-            if data[y][x] == '#':
-                walls.add((y, x))
+    # 1) BFS for normal cost from S
+    dist_from_S = bfs_normal(mapp, S)
+    # 2) BFS for normal cost from E
+    dist_from_E = bfs_normal(mapp, E)
 
-    no_cheat_cost, min_cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 0)
+    # Baseline no-cheat cost T0
+    T0 = dist_from_S[E[0]][E[1]]
+    if T0 is None:
+        # If there's no path at all, puzzle is ill-posed or map is impossible
+        return 0
 
-    while True:
-        with_cheat_cost, cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 20)
-        print(no_cheat_cost, no_cheat_cost - with_cheat_cost, cheat)
-        if no_cheat_cost - with_cheat_cost >= 50:
-            already_cheated.add(cheat)
-        else:
-            break
+    # Gather all track cells
+    track_cells = find_track_cells(mapp)
 
-    return len(already_cheated)
+    # For each track cell, precompute BFS ignoring walls (up to 2 steps).
+    # We'll store them in a dictionary: cheat_dist[(r, c)] = 2D-dist-array
+    cheat_dist_map = {}
+    for cell in track_cells:
+        cheat_dist_map[cell] = bfs_ignore_walls_limited(mapp, cell, max_steps=2)
+
+    # Now enumerate all pairs of track cells (A, B).
+    # The cheat is: S -> A (normal), A -> B (ignore walls, <=2 steps), B -> E (normal).
+    # If the ignoring-walls distance is None or >2, skip.  Must also land on track again.
+    # Then saving = T0 - total_time.  If >= 100 => count that cheat.
+    # Distinct cheats are determined by (A, B).
+    good_cheats = 0
+    for A in track_cells:
+        aS = dist_from_S[A[0]][A[1]]  # cost S->A
+        if aS is None:
+            continue
+        for B in track_cells:
+            distAtoB = cheat_dist_map[A][B[0]][B[1]]
+            if distAtoB is None:  # can't cheat from A->B in <=2 steps
+                continue
+            bE = dist_from_E[B[0]][B[1]]  # cost B->E
+            if bE is None:
+                continue
+            T_cheat = aS + distAtoB + bE
+            saving = T0 - T_cheat
+            if saving >= 100:
+                good_cheats += 1
+    return good_cheats
+
+def part2(mapp):
+    S = find_item(mapp, 'S')
+    E = find_item(mapp, 'E')
+    dist_from_S = bfs_normal(mapp, S)
+    dist_from_E = bfs_normal(mapp, E)
+    T0 = dist_from_S[E[0]][E[1]]
+    if T0 is None:
+        return 0
+
+    track_cells = find_track_cells(mapp)
+
+    # Precompute ignoring-walls BFS up to 20 steps from each track cell
+    cheat_dist_map = {}
+    for cell in track_cells:
+        cheat_dist_map[cell] = bfs_ignore_walls_limited(mapp, cell, max_steps=20)
+
+    good_cheats = 0
+    for A in track_cells:
+        aS = dist_from_S[A[0]][A[1]]
+        if aS is None:
+            continue
+        for B in track_cells:
+            distAtoB = cheat_dist_map[A][B[0]][B[1]]
+            if distAtoB is None:
+                continue
+            bE = dist_from_E[B[0]][B[1]]
+            if bE is None:
+                continue
+            T_cheat = aS + distAtoB + bE
+            saving = T0 - T_cheat
+            if saving >= 100:
+                good_cheats += 1
+    return good_cheats
 
 def solve(puzzle_input):
-    """Solve the puzzle for the given input."""
     data = parse_data(puzzle_input)
     yield part1(data)
     yield part2(data)
 
-
 if __name__ == "__main__":
     for path in sys.argv[1:]:
-        print(f"\n{path}:")
-        solutions = solve(puzzle_input=pathlib.Path(path).read_text().rstrip())
-        print("\n".join(str(solution) for solution in solutions))
+        mapp = parse_data(pathlib.Path(path).read_text())
+        answers = solve(mapp)
+        print(path, *answers)
