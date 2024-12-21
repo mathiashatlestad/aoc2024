@@ -22,22 +22,19 @@ def parse_data(puzzle_input):
     return [list(line) for line in lines if line]
 
 
-def dijkstra_with_cheating(walls, already_cheated, start, end, width, height, allowed_to_cheat):
+def dijkstra_with_cheating(walls, already_cheated, start, end, width, height, max_allowed_to_cheat):
     pq = []
-    no_cheat = (-1, -1, None)
+    no_cheat = (-1, -1, -1, -1)
 
-    heapq.heappush(pq, (0, start[0], start[1], no_cheat))
+    heapq.heappush(pq, (0, start[0], start[1], no_cheat, max_allowed_to_cheat))
     visited = {}
     min_cost = float('inf')
-    min_cheat = (-1, -1)
+    min_cheat = no_cheat
 
     while pq:
-        cost, y, x, cheat = heapq.heappop(pq)
+        cost, y, x, cheat, remaining_cheats = heapq.heappop(pq)
 
-        if not 0 <= y < height or not 0 <= x < width:
-            continue
-
-        if (y, x) in walls:
+        if (y, x) in walls and remaining_cheats <= 0:
             continue
 
         if cheat in already_cheated:
@@ -57,13 +54,18 @@ def dijkstra_with_cheating(walls, already_cheated, start, end, width, height, al
             ny, nx = y + dy, x + dx
             if 0 <= ny < height and 0 <= nx < width:
                 if (ny, nx) not in walls:
-                    heapq.heappush(pq, (cost + 1, ny, nx, cheat))
-                elif allowed_to_cheat and cheat is no_cheat:
-                    for new_cheat_direction, (dy, dx) in DIRECTIONS.items():
-                        cy, cx = ny + dy, nx + dx
-                        new_cheat = (cy, cx, new_cheat_direction)
-                        heapq.heappush(pq, (cost + 1, ny, nx, new_cheat))
-                        heapq.heappush(pq, (cost + 2, cy, cx, new_cheat))
+                    new_cheat = cheat
+                    new_remaining_cheat = remaining_cheats
+                    if cheat != no_cheat:
+                        new_remaining_cheat = remaining_cheats - 1
+                        new_cheat = (cheat[0], cheat[1], ny, nx)
+                    heapq.heappush(pq, (cost + 1, ny, nx, new_cheat, new_remaining_cheat))
+                elif remaining_cheats > 0:
+                    if cheat == no_cheat:
+                        new_cheat = (ny, nx, ny, nx)
+                    else:
+                        new_cheat = (cheat[0], cheat[1], ny, nx)
+                    heapq.heappush(pq, (cost + 1, ny, nx, new_cheat, remaining_cheats - 1))
 
     return min_cost, min_cheat
 
@@ -85,12 +87,12 @@ def part1(data):
             if data[y][x] == '#':
                 walls.add((y, x))
 
-    no_cheat_cost, min_cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, False)
+    no_cheat_cost, min_cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 0)
 
     while True:
-        with_cheat_cost, cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, True)
-        print(no_cheat_cost, with_cheat_cost, cheat)
-        if no_cheat_cost - with_cheat_cost >= 100:
+        with_cheat_cost, cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 2)
+        if no_cheat_cost - with_cheat_cost >= 20:
+            print(no_cheat_cost, no_cheat_cost - with_cheat_cost, cheat)
             already_cheated.add(cheat)
         else:
             break
@@ -98,7 +100,27 @@ def part1(data):
     return len(already_cheated)
 
 def part2(data):
-    return find_item(data, 'S')
+    walls = set()
+    width, height = len(data[0]), len(data)
+    start = find_item(data, 'S')
+    end = find_item(data, 'E')
+    already_cheated = set()
+    for y in range(height):
+        for x in range(width):
+            if data[y][x] == '#':
+                walls.add((y, x))
+
+    no_cheat_cost, min_cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 0)
+
+    while True:
+        with_cheat_cost, cheat = dijkstra_with_cheating(walls, already_cheated, start, end, width, height, 20)
+        print(no_cheat_cost, no_cheat_cost - with_cheat_cost, cheat)
+        if no_cheat_cost - with_cheat_cost >= 50:
+            already_cheated.add(cheat)
+        else:
+            break
+
+    return len(already_cheated)
 
 def solve(puzzle_input):
     """Solve the puzzle for the given input."""
