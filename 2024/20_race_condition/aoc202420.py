@@ -37,6 +37,9 @@ def dijkstra_with_cheating(walls, already_cheated, start, end, width, height, al
         if not 0 <= y < height or not 0 <= x < width:
             continue
 
+        if (y, x) in walls:
+            continue
+
         if cheat in already_cheated:
             continue
 
